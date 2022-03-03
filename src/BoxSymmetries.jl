@@ -2,8 +2,30 @@ module BoxSymmetries
 export sym
 
 using ArgCheck
+struct Permutation{N}
+    perm::NTuple{N,Int}
+    function Permutation(perm::NTuple{N,Int}) where {N}
+        @argcheck ispermutation(perm)
+        return new{N}(perm)
+    end
+end
+function ispermutation(perm::NTuple{N,Int}) where {N}
+    ret = true
+    for key in ntuple(identity, Val(N))
+        ret = ret & (key in perm)
+    end
+    ret
+end
+ispermutation(perm::Permutation) = true
+
+function act_tuple(p::Permutation{N}, t::NTuple{N}) where {N}
+    map(p.perm) do i
+        @inbounds t[i]
+    end
+end
+
 struct BoxSymmetry{N}
-    permutation::NTuple{N,Int}
+    axesperm::Permutation
     flipsign::NTuple{N,Bool}
 end
 Base.ndims(o::BoxSymmetry{N}) where {N} = N
@@ -11,36 +33,28 @@ Base.ndims(::Type{BoxSymmetry{N}}) where {N} = N
 
 function outaxes(o::BoxSymmetry, axes::Tuple)
     @argcheck length(axes) == ndims(o)
-    @argcheck ispermutation(o.permutation)
-    unsafe_permute(o.permutation, axes)
+    act_tuple(o.axesperm, axes)
 end
 
-function unsafe_permute(perm::NTuple{N}, items::NTuple{N,Any}) where {N}
-    map(perm) do i
-        @inbounds items[i]
-    end
-end
-
-function apply_symmetry!(out::AbstractArray{<:Any, N}, o::BoxSymmetry{N}, x) where {N}
+function act_array!(out::AbstractArray{<:Any, N}, o::BoxSymmetry{N}, x) where {N}
     @argcheck axes(out) == outaxes(o, axes(x))
-    @argcheck ispermutation(o.permutation)
     flipped_axes = map(flipaxis, axes(x), o.flipsign)
     @inbounds for I in CartesianIndices(x)
         indsx = Tuple(I)
         indsf = map(getindex,flipped_axes, indsx)
-        indsfp = unsafe_permute(o.permutation, indsf)
+        indsfp = act_tuple(o.axesperm, indsf)
         Iout = CartesianIndex(indsfp)
         out[Iout] = x[I]
     end
     out
 end
-function apply_symmetry(o::BoxSymmetry, x)
+function act_array(o::BoxSymmetry, x)
     out = similar(x, outaxes(o,axes(x)))
-    apply_symmetry!(out, o, x)
+    act_array!(out, o, x)
 end
 
 function (o::BoxSymmetry)(x)
-    apply_symmetry(o,x)
+    act_array(o,x)
 end
 
 function flipaxis(ax::AbstractRange, flip::Bool)
@@ -51,14 +65,6 @@ function flipaxis(ax::AbstractRange, flip::Bool)
     end
 end
 
-function ispermutation(perm::NTuple{N,Int}) where {N}
-    ret = true
-    for key in ntuple(identity, Val(N))
-        ret = ret & (key in perm)
-    end
-    ret
-end
-
 """
 
     sym(args::Integer...)
@@ -66,16 +72,15 @@ end
 Create a box symmetry, according to args.
 """
 function sym(args::Integer...)
-    perm = map(abs, args)
-    @argcheck ispermutation(perm)
+    perm = Permutation(map(Int∘abs, args))
     flip = map(<(0), args)
     ret = BoxSymmetry(perm, flip)
     ret
 end
 function astuple(o::BoxSymmetry)
-    (-1) .^ (o.flipsign) .* o.permutation
-end
+    (-1) .^ (o.flipsign) .* o.axesperm.perm
 
+end
 function Base.show(io::IO, o::BoxSymmetry)
     print(io, "sym", astuple(o))
 end
@@ -114,8 +119,8 @@ end
 
 end
 
-# TODO rand
-# TODO composition of symmetries
-# TODO inversion of symmetries
 # TODO lazy iterator of all symmetries of given dimension
+# TODO rand
+# TODO composition + inversion of symmetries
 # TODO isrotation for checking if orientation is preserved
+# TODO aliases like rot90
