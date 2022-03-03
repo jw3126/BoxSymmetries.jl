@@ -1,6 +1,7 @@
 module BoxSymmetries
-export sym
+export BoxSym
 
+using Random: AbstractRNG, Random
 using ArgCheck
 struct Permutation{N}
     perm::NTuple{N,Int}
@@ -17,26 +18,44 @@ function ispermutation(perm::NTuple{N,Int}) where {N}
     ret
 end
 ispermutation(perm::Permutation) = true
-
 function act_tuple(p::Permutation{N}, t::NTuple{N}) where {N}
     map(p.perm) do i
         @inbounds t[i]
     end
 end
+function inverse(p::Permutation{N})::Permutation{N} where {N}
+    Permutation(map(ntuple(identity, Val(N))) do i
+        indexof(p.perm, i)
+    end)
+end
+function indexof(t::NTuple, item)
+    for i in eachindex(t)
+        if t[i] === item
+            return i
+        end
+    end
+    error()
+end
+function unit(::Type{Permutation{N}}) where {N}
+    Permutation(ntuple(identity, Val(N)))
+end
+function compose(p1::Permutation{N}, p2::Permutation{N})::Permutation{N} where {N}
 
-struct BoxSymmetry{N}
+end
+
+struct BoxSym{N}
     axesperm::Permutation
     flipsign::NTuple{N,Bool}
 end
-Base.ndims(o::BoxSymmetry{N}) where {N} = N
-Base.ndims(::Type{BoxSymmetry{N}}) where {N} = N
+Base.ndims(o::BoxSym{N}) where {N} = N
+Base.ndims(::Type{BoxSym{N}}) where {N} = N
 
-function outaxes(o::BoxSymmetry, axes::Tuple)
+function outaxes(o::BoxSym, axes::Tuple)
     @argcheck length(axes) == ndims(o)
     act_tuple(o.axesperm, axes)
 end
 
-function act_array!(out::AbstractArray{<:Any, N}, o::BoxSymmetry{N}, x) where {N}
+function act_array!(out::AbstractArray{<:Any, N}, o::BoxSym{N}, x) where {N}
     @argcheck axes(out) == outaxes(o, axes(x))
     flipped_axes = map(flipaxis, axes(out), o.flipsign)
     @inbounds for I in CartesianIndices(x)
@@ -48,12 +67,12 @@ function act_array!(out::AbstractArray{<:Any, N}, o::BoxSymmetry{N}, x) where {N
     end
     out
 end
-function act_array(o::BoxSymmetry, x)
+function act_array(o::BoxSym, x)
     out = similar(x, outaxes(o,axes(x)))
     act_array!(out, o, x)
 end
 
-function (o::BoxSymmetry)(x)
+function (o::BoxSym)(x)
     act_array(o,x)
 end
 
@@ -67,60 +86,60 @@ end
 
 """
 
-    sym(args::Integer...)
+    BoxSym(args::Integer...)
 
 Create a box symmetry, according to args.
 """
-function sym(args::Integer...)
+function BoxSym(args::Integer...)
     perm = Permutation(map(Int∘abs, args))
     flip = map(<(0), args)
-    ret = BoxSymmetry(perm, flip)
+    ret = BoxSym(perm, flip)
     ret
 end
-function astuple(o::BoxSymmetry)
+function astuple(o::BoxSym)
     (-1) .^ (o.flipsign) .* o.axesperm.perm
 
 end
-function Base.show(io::IO, o::BoxSymmetry)
-    print(io, "sym", astuple(o))
+function Base.show(io::IO, o::BoxSym)
+    print(io, "BoxSym", astuple(o))
 end
 
 ################################################################################
-#### symmetries
+#### instances
 ################################################################################
 
-const SYMMETRIES1D = [sym(1), sym(-1)]
+const SYMMETRIES1D = [BoxSym(1), BoxSym(-1)]
 const SYMMETRIES2D = [
-    sym(1,2), sym(1,-2), sym(-1,2), sym(-1,-2),
-    sym(2,1), sym(2,-1), sym(-2,1), sym(-2,-1),
+    BoxSym(1,2), BoxSym(1,-2), BoxSym(-1,2), BoxSym(-1,-2),
+    BoxSym(2,1), BoxSym(2,-1), BoxSym(-2,1), BoxSym(-2,-1),
 ]
 const SYMMETRIES3D = [
-    sym(1,2,3), sym(1,2,-3), sym(1,-2,3), sym(1,-2,-3), sym(-1,2,3), sym(-1,2,-3), sym(-1,-2,3), sym(-1,-2,-3), 
-    sym(1,3,2), sym(1,3,-2), sym(1,-3,2), sym(1,-3,-2), sym(-1,3,2), sym(-1,3,-2), sym(-1,-3,2), sym(-1,-3,-2), 
-    sym(3,2,1), sym(3,2,-1), sym(3,-2,1), sym(3,-2,-1), sym(-3,2,1), sym(-3,2,-1), sym(-3,-2,1), sym(-3,-2,-1), 
-    sym(2,1,3), sym(2,1,-3), sym(2,-1,3), sym(2,-1,-3), sym(-2,1,3), sym(-2,1,-3), sym(-2,-1,3), sym(-2,-1,-3), 
-    sym(2,3,1), sym(2,3,-1), sym(2,-3,1), sym(2,-3,-1), sym(-2,3,1), sym(-2,3,-1), sym(-2,-3,1), sym(-2,-3,-1), 
-    sym(3,1,2), sym(3,1,-2), sym(3,-1,2), sym(3,-1,-2), sym(-3,1,2), sym(-3,1,-2), sym(-3,-1,2), sym(-3,-1,-2), 
+    BoxSym(1,2,3), BoxSym(1,2,-3), BoxSym(1,-2,3), BoxSym(1,-2,-3), BoxSym(-1,2,3), BoxSym(-1,2,-3), BoxSym(-1,-2,3), BoxSym(-1,-2,-3), 
+    BoxSym(1,3,2), BoxSym(1,3,-2), BoxSym(1,-3,2), BoxSym(1,-3,-2), BoxSym(-1,3,2), BoxSym(-1,3,-2), BoxSym(-1,-3,2), BoxSym(-1,-3,-2), 
+    BoxSym(3,2,1), BoxSym(3,2,-1), BoxSym(3,-2,1), BoxSym(3,-2,-1), BoxSym(-3,2,1), BoxSym(-3,2,-1), BoxSym(-3,-2,1), BoxSym(-3,-2,-1), 
+    BoxSym(2,1,3), BoxSym(2,1,-3), BoxSym(2,-1,3), BoxSym(2,-1,-3), BoxSym(-2,1,3), BoxSym(-2,1,-3), BoxSym(-2,-1,3), BoxSym(-2,-1,-3), 
+    BoxSym(2,3,1), BoxSym(2,3,-1), BoxSym(2,-3,1), BoxSym(2,-3,-1), BoxSym(-2,3,1), BoxSym(-2,3,-1), BoxSym(-2,-3,1), BoxSym(-2,-3,-1), 
+    BoxSym(3,1,2), BoxSym(3,1,-2), BoxSym(3,-1,2), BoxSym(3,-1,-2), BoxSym(-3,1,2), BoxSym(-3,1,-2), BoxSym(-3,-1,2), BoxSym(-3,-1,-2), 
 ]
 
-symmetries(::Val{1}) = SYMMETRIES1D
-symmetries(::Val{2}) = SYMMETRIES2D
-symmetries(::Val{3}) = SYMMETRIES3D
 
-"""
-    symmetries(dim::Integer)
-    symmetries(dim::Val(::Integer))
+Base.instances(::Type{BoxSym{1}}) = SYMMETRIES1D
+Base.instances(::Type{BoxSym{2}}) = SYMMETRIES2D
+Base.instances(::Type{BoxSym{3}}) = SYMMETRIES3D
 
-Return an iterator over all box symmeties of a given dimension.
-"""
-function symmetries(n::Integer)
-    symmetries(Val(Int(n)))
-end
+Random.rand(rng::AbstractRNG, G::Type{<:BoxSym}) = rand(rng, instances(G))
 
+################################################################################
+#### Precompile
+################################################################################
+let
+    BoxSym(1)(Float64[1])
+    BoxSym(1,-2)(Float64[1;;])
+    BoxSym(1,-2,3)(Float64[1;;;])
 end
 
 # TODO lazy iterator of all symmetries of given dimension
-# TODO rand
 # TODO composition + inversion of symmetries
 # TODO isrotation for checking if orientation is preserved
 # TODO aliases like rot90
+end #module
