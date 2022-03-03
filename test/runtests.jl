@@ -1,5 +1,6 @@
 using Test
 using BoxSymmetries
+using BoxSymmetries: Perm
 @testset "1d" begin
     @inferred BoxSym(1)([1,2,3])
     @test BoxSym(-1)([1,2,3]) == [3,2,1]
@@ -49,12 +50,44 @@ end
 
 @testset "show it like you build it" begin
     for dim in 1:3
-        for g in instances(BoxSym{dim})
-            s = sprint(show, g)
-            g2 = eval(Meta.parse(s))
-            @test g === g2
+        for G in [BoxSym{dim}, Perm{dim}]
+            for g in instances(G)
+                s = sprint(show, g)
+                g2 = eval(Meta.parse(s))
+                @test g === g2
+            end
         end
     end
 end
 
+function test_group_laws(G)
+    @testset "unit" begin
+        @test unit(G) isa G
+        for g in instances(G)
+            @test unit(G) ∘ g === g
+            @test g ∘ unit(G) === g
+        end
+    end
+    @testset "inverse" begin
+        for g in instances(G)
+            @test inverse(g) isa G
+            @test (g∘inverse(g)) === unit(G)
+            @test (inverse(g)∘g) === unit(G)
+        end
+    end
+    @testset "associative" begin
+        for g1 in instances(G)
+            for g2 in instances(G)
+                for g3 in instances(G)
+                    @test g1∘(g2∘g3) === (g1∘g2)∘g3
+                end
+            end
+        end
+    end
+end
 
+@testset "Perm" begin
+    test_group_laws(Perm{1})
+    test_group_laws(Perm{2})
+    test_group_laws(Perm{3})
+end

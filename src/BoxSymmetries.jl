@@ -1,14 +1,27 @@
 module BoxSymmetries
 export BoxSym
+export unit, inverse, ∘
 
 using Random: AbstractRNG, Random
 using ArgCheck
-struct Permutation{N}
+################################################################################
+#### Perm
+################################################################################
+"""
+Permutation
+"""
+struct Perm{N}
     perm::NTuple{N,Int}
-    function Permutation(perm::NTuple{N,Int}) where {N}
+    function Perm(perm::NTuple{N,Int}) where {N}
         @argcheck ispermutation(perm)
         return new{N}(perm)
     end
+end
+function Perm(args::Integer...)
+    Perm(Int.(args))
+end
+function Base.show(io::IO, p::Perm)
+    print(io, Perm, p.perm)
 end
 function ispermutation(perm::NTuple{N,Int}) where {N}
     ret = true
@@ -17,14 +30,20 @@ function ispermutation(perm::NTuple{N,Int}) where {N}
     end
     ret
 end
-ispermutation(perm::Permutation) = true
-function act_tuple(p::Permutation{N}, t::NTuple{N}) where {N}
+ispermutation(perm::Perm) = true
+function act_tuple(p::Perm{N}, t::NTuple{N}) where {N}
     map(p.perm) do i
         @inbounds t[i]
     end
 end
-function inverse(p::Permutation{N})::Permutation{N} where {N}
-    Permutation(map(ntuple(identity, Val(N))) do i
+function unit(::Type{Perm{N}}) where {N}
+    Perm(ntuple(identity, Val(N)))
+end
+function Base.:(∘)(p1::Perm{N}, p2::Perm{N})::Perm{N} where {N}
+    Perm(act_tuple(p1, p2.perm))
+end
+function inverse(p::Perm{N})::Perm{N} where {N}
+    Perm(map(ntuple(identity, Val(N))) do i
         indexof(p.perm, i)
     end)
 end
@@ -36,15 +55,22 @@ function indexof(t::NTuple, item)
     end
     error()
 end
-function unit(::Type{Permutation{N}}) where {N}
-    Permutation(ntuple(identity, Val(N)))
-end
-function compose(p1::Permutation{N}, p2::Permutation{N})::Permutation{N} where {N}
+const PERM1 = [Perm(1)]
+const PERM2 = [Perm(1,2), Perm(2,1)]
+const PERM3 = [Perm(1,2,3), 
+               Perm(1,3,2), Perm(3,2,1), Perm(2,1,3),
+               Perm(2,3,1), Perm(3,1,2),
+]
+Base.instances(::Type{Perm{1}}) = PERM1
+Base.instances(::Type{Perm{2}}) = PERM2
+Base.instances(::Type{Perm{3}}) = PERM3
 
-end
 
+################################################################################
+#### BoxSym
+################################################################################
 struct BoxSym{N}
-    axesperm::Permutation
+    axesperm::Perm
     flipsign::NTuple{N,Bool}
 end
 Base.ndims(o::BoxSym{N}) where {N} = N
@@ -91,17 +117,23 @@ end
 Create a box symmetry, according to args.
 """
 function BoxSym(args::Integer...)
-    perm = Permutation(map(Int∘abs, args))
+    perm = Perm(map(Int∘abs, args))
     flip = map(<(0), args)
     ret = BoxSym(perm, flip)
     ret
 end
 function astuple(o::BoxSym)
     (-1) .^ (o.flipsign) .* o.axesperm.perm
-
 end
 function Base.show(io::IO, o::BoxSym)
     print(io, "BoxSym", astuple(o))
+end
+
+function unit(::Type{BoxSym{N}})::BoxSym{N} where {N}
+    BoxSym(ntuple(identity, Val(N))...)
+end
+function inverse(g::BoxSym)
+    # TODO
 end
 
 ################################################################################
