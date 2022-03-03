@@ -45,9 +45,10 @@ julia> size(g(arr))
 (4, 2, 1, 3)
 ```
 # Theory
-We define the group of box symmetries of dimension N to be all linear maps ℝᴺ → ℝᴺ that map the 
-cube [-1,1]ᴺ onto itself.
+We define the group of box symmetries of dimension N to be the group of all linear maps
+ℝᴺ → ℝᴺ that restrict to bijections on the unit cube [-1,1]ᴺ → [-1,1]ᴺ.
 One can check that such maps must map coordinate axes onto coordinate axes and preserve length.
+So essentially they are allowed to permute axes and flip signs of axes, nothing else.
 It follows that box symmetries are in bijection with the following data:
 ```julia
 struct BoxSymmetry
@@ -65,7 +66,6 @@ To compactly denote this data, we use the `sym` notation, that is best explained
 * `sym(-1, 2)`: (x,y) ↦ (-x, y)
 * `sym( 1,-2)`: (x,y) ↦ ( x,-y)
 * `sym( 2, 1, -3)`: (x,y,z) ↦ ( y, x, -z)
-
 
 # Alternatives 
 For the use case of 2d images, there are alternatives:
