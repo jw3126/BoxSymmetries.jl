@@ -38,12 +38,12 @@ end
 
 function act_array!(out::AbstractArray{<:Any, N}, o::BoxSymmetry{N}, x) where {N}
     @argcheck axes(out) == outaxes(o, axes(x))
-    flipped_axes = map(flipaxis, axes(x), o.flipsign)
+    flipped_axes = map(flipaxis, axes(out), o.flipsign)
     @inbounds for I in CartesianIndices(x)
-        indsx = Tuple(I)
-        indsf = map(getindex,flipped_axes, indsx)
-        indsfp = act_tuple(o.axesperm, indsf)
-        Iout = CartesianIndex(indsfp)
+        inds = Tuple(I)
+        inds = act_tuple(o.axesperm, inds)
+        inds = map(getindex,flipped_axes, inds)
+        Iout = CartesianIndex(inds)
         out[Iout] = x[I]
     end
     out
