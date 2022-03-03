@@ -35,10 +35,15 @@ end
     symmetries = BoxSymmetries.symmetries
     @test allunique(symmetries(1))
     @test length(symmetries(1)) == 2
+    @test rand(symmetries(1)) isa BoxSymmetry{1}
+
     @test allunique(symmetries(2))
     @test length(symmetries(2)) == 8
+    @test rand(symmetries(2)) isa BoxSymmetry{2}
+
     @test allunique(symmetries(3))
     @test length(symmetries(3)) == 48
+    @test rand(symmetries(3)) isa BoxSymmetry{3}
 end
 
 @testset "show it like you build it" begin
