@@ -1,10 +1,19 @@
 using Test
 using BoxSymmetries
 using BoxSymmetries: Perm
+
 @testset "1d" begin
     @inferred BoxSym(1)([1,2,3])
     @test BoxSym(-1)([1,2,3]) == [3,2,1]
     @test BoxSym( 1)([1,2,3]) == [1,2,3]
+
+    @test inverse(BoxSym(1)) === BoxSym(1)
+    @test inverse(BoxSym(-1)) === BoxSym(-1)
+    @test BoxSym(1) ∘ BoxSym(-1) === BoxSym(-1)
+    @test BoxSym(-1) ∘ BoxSym(1) === BoxSym(-1)
+    @test BoxSym(1) ∘ BoxSym(1) === BoxSym(1)
+    @test BoxSym(-1) ∘ BoxSym(-1) === BoxSym(1)
+    @test unit(BoxSym{1}) === BoxSym(1)
 end
 
 @testset "2d" begin
@@ -20,6 +29,18 @@ end
     @test BoxSym( 2,-1)(m) == [4 1; 5 2; 6 3]
     @test BoxSym(-2, 1)(m) == [3 6; 2 5; 1 4]
     @test BoxSym(-2,-1)(m) == [6 3; 5 2; 4 1]
+end
+
+@testset "action associative" begin
+    for dim in 1:3
+        for _ in 1:10
+            dims = Tuple(rand(1:5) for _ in 1:dim)
+            x = randn(dims)
+            g1 = rand(BoxSym{dim})
+            g2 = rand(BoxSym{dim})
+            @test (g1∘g2)(x) == g1(g2(x))
+        end
+    end
 end
 
 @testset "sugar" begin
@@ -86,8 +107,12 @@ function test_group_laws(G)
     end
 end
 
-@testset "Perm" begin
+@testset "group laws" begin
     test_group_laws(Perm{1})
     test_group_laws(Perm{2})
     test_group_laws(Perm{3})
+
+    test_group_laws(BoxSym{1})
+    test_group_laws(BoxSym{2})
+    test_group_laws(BoxSym{3})
 end

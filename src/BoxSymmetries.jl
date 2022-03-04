@@ -70,6 +70,10 @@ Base.instances(::Type{Perm{3}}) = PERM3
 #### BoxSym
 ################################################################################
 struct BoxSym{N}
+    # BoxSym is the semidirect product Boolⁿ ⋊ Sₙ
+    # here axesperm ∈ Sₙ controls the induced action on the set of coordinate axes
+    # flipsign controls for each axis, whether the sign is flipped. E.g. whether
+    # eᵢ ↦ eⱼ or eᵢ ↦ -eⱼ for the standard basis
     axesperm::Perm
     flipsign::NTuple{N,Bool}
 end
@@ -132,8 +136,27 @@ end
 function unit(::Type{BoxSym{N}})::BoxSym{N} where {N}
     BoxSym(ntuple(identity, Val(N))...)
 end
-function inverse(g::BoxSym)
-    # TODO
+function inverse(g::BoxSym{N})::BoxSym{N} where {N}
+    n = g.flipsign
+    h = g.axesperm
+    h⁻¹ = inverse(h)
+    n⁻¹ = n
+    BoxSym{N}(
+        h⁻¹,
+        act_tuple(h⁻¹, n⁻¹),
+   )
+end
+function Base.:(∘)(g1::BoxSym{N}, g2::BoxSym{N})::BoxSym{N} where {N}
+    # We have
+    # BoxSym = Boolⁿ ⋊ Sₙ
+    # and we use the semidirect product formular
+    n1 = g1.flipsign
+    n2 = g2.flipsign
+    h1 = g1.axesperm
+    h2 = g2.axesperm
+    h = h1∘h2
+    n = map(⊻, n1, act_tuple(h1, n2))
+    BoxSym{N}(h,n)
 end
 
 ################################################################################
@@ -171,7 +194,6 @@ let
 end
 
 # TODO lazy iterator of all symmetries of given dimension
-# TODO composition + inversion of symmetries
 # TODO isrotation for checking if orientation is preserved
 # TODO aliases like rot90
 end #module
