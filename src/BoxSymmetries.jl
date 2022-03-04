@@ -172,7 +172,10 @@ const BOXSYM_FROM_ALIAS2D = Dict(
     :flipdiag  => BoxSym( 2, 1),
     :flipadiag => BoxSym(-2,-1),
 )
-BoxSym(alias::Symbol) = BOXSYM_FROM_ALIAS2D[alias]
+
+BoxSym{2}(alias::Symbol) = BOXSYM_FROM_ALIAS2D[alias]
+
+# TODO 3d aliases
 
 ################################################################################
 #### instances

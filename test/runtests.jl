@@ -32,14 +32,14 @@ end
 
 
     A = [:a11 :a12; :a21 :a22]
-    @test (BoxSym(:unit     ))(A) == [:a11 :a12; :a21 :a22]
-    @test (BoxSym(:rot90    ))(A) == [:a12 :a22; :a11 :a21]
-    @test (BoxSym(:rot180   ))(A) == [:a22 :a21; :a12 :a11]
-    @test (BoxSym(:rot270   ))(A) == [:a21 :a11; :a22 :a12]
-    @test (BoxSym(:flipx    ))(A) == [:a21 :a22; :a11 :a12]
-    @test (BoxSym(:flipy    ))(A) == [:a12 :a11; :a22 :a21]
-    @test (BoxSym(:flipdiag ))(A) == [:a11 :a21; :a12 :a22]
-    @test (BoxSym(:flipadiag))(A) == [:a22 :a12; :a21 :a11]
+    @test (BoxSym{2}(:unit     ))(A) == [:a11 :a12; :a21 :a22]
+    @test (BoxSym{2}(:rot90    ))(A) == [:a12 :a22; :a11 :a21]
+    @test (BoxSym{2}(:rot180   ))(A) == [:a22 :a21; :a12 :a11]
+    @test (BoxSym{2}(:rot270   ))(A) == [:a21 :a11; :a22 :a12]
+    @test (BoxSym{2}(:flipx    ))(A) == [:a21 :a22; :a11 :a12]
+    @test (BoxSym{2}(:flipy    ))(A) == [:a12 :a11; :a22 :a21]
+    @test (BoxSym{2}(:flipdiag ))(A) == [:a11 :a21; :a12 :a22]
+    @test (BoxSym{2}(:flipadiag))(A) == [:a22 :a12; :a21 :a11]
 end
 
 @testset "action associative" begin
