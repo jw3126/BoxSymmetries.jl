@@ -160,6 +160,21 @@ function Base.:(∘)(g1::BoxSym{N}, g2::BoxSym{N})::BoxSym{N} where {N}
 end
 
 ################################################################################
+#### ALIASES
+################################################################################
+const BOXSYM_FROM_ALIAS2D = Dict(
+    :unit      => BoxSym( 1, 2),
+    :rot90     => BoxSym(-2, 1),
+    :rot180    => BoxSym(-1,-2),
+    :rot270    => BoxSym( 2,-1),
+    :flipx     => BoxSym(-1, 2),
+    :flipy     => BoxSym( 1,-2),
+    :flipdiag  => BoxSym( 2, 1),
+    :flipadiag => BoxSym(-2,-1),
+)
+BoxSym(alias::Symbol) = BOXSYM_FROM_ALIAS2D[alias]
+
+################################################################################
 #### instances
 ################################################################################
 
@@ -195,5 +210,4 @@ end
 
 # TODO lazy iterator of all symmetries of given dimension
 # TODO isrotation for checking if orientation is preserved
-# TODO aliases like rot90
 end #module

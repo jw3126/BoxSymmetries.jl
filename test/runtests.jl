@@ -29,6 +29,17 @@ end
     @test BoxSym( 2,-1)(m) == [4 1; 5 2; 6 3]
     @test BoxSym(-2, 1)(m) == [3 6; 2 5; 1 4]
     @test BoxSym(-2,-1)(m) == [6 3; 5 2; 4 1]
+
+
+    A = [:a11 :a12; :a21 :a22]
+    @test (BoxSym(:unit     ))(A) == [:a11 :a12; :a21 :a22]
+    @test (BoxSym(:rot90    ))(A) == [:a12 :a22; :a11 :a21]
+    @test (BoxSym(:rot180   ))(A) == [:a22 :a21; :a12 :a11]
+    @test (BoxSym(:rot270   ))(A) == [:a21 :a11; :a22 :a12]
+    @test (BoxSym(:flipx    ))(A) == [:a21 :a22; :a11 :a12]
+    @test (BoxSym(:flipy    ))(A) == [:a12 :a11; :a22 :a21]
+    @test (BoxSym(:flipdiag ))(A) == [:a11 :a21; :a12 :a22]
+    @test (BoxSym(:flipadiag))(A) == [:a22 :a12; :a21 :a11]
 end
 
 @testset "action associative" begin
