@@ -165,9 +165,9 @@ Random.rand(rng::AbstractRNG, G::Type{<:BoxSym}) = rand(rng, instances(G))
 #### Precompile
 ################################################################################
 let
-    BoxSym(1)(Float64[1])
-    BoxSym(1,-2)(Float64[1;;])
-    BoxSym(1,-2,3)(Float64[1;;;])
+    BoxSym(1)(fill(1.0, 1))
+    BoxSym(1,-2)(fill(1.0, 1,1))
+    BoxSym(1,-2,3)(fill(1.0, 1,1,1))
 end
 
 # TODO lazy iterator of all symmetries of given dimension
