@@ -68,6 +68,9 @@ To compactly denote this data, we use the following notation, that is best expla
 * `BoxSym( 2, 1, -3)`: (x,y,z) ↦ ( y, x, -z)
 * `BoxSym(-2, -3, 1)`: (x,y,z) ↦ ( z,-x, -y)
 
+In other words `1,2,3` stand for the directed coordinate axes and `-1,-2,-3` stand for the coordinate axes directed in the opposite direction. `Box(a,b,c)` means that axis 1 maps to axis a,
+axis 2 maps to axis b and axis 3 maps to axis c.
+
 # Alternatives 
 For the use case of 2d images, there are alternatives:
 * [SquareSymmetries.jl](https://github.com/icetube23/SquareSymmetries.jl)
