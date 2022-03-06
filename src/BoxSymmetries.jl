@@ -85,7 +85,12 @@ function outaxes(o::BoxSym, axes::Tuple)
     act_tuple(o.axesperm, axes)
 end
 
-function act_array!(out::AbstractArray{<:Any, N}, o::BoxSym{N}, x) where {N}
+isunit(g) = (g === unit(typeof(g)))
+
+act_array!(out, g::BoxSym, x) = act_array_generic!(out, g, x)
+act_array(g::BoxSym, x) = act_array_generic(g, x)
+
+function act_array_generic!(out::AbstractArray{<:Any, N}, o::BoxSym{N}, x) where {N}
     @argcheck axes(out) == outaxes(o, axes(x))
     flipped_axes = map(flipaxis, axes(out), o.flipsign)
     @inbounds for I in CartesianIndices(x)
@@ -97,9 +102,9 @@ function act_array!(out::AbstractArray{<:Any, N}, o::BoxSym{N}, x) where {N}
     end
     out
 end
-function act_array(o::BoxSym, x)
+function act_array_generic(o::BoxSym, x)
     out = similar(x, outaxes(o,axes(x)))
-    act_array!(out, o, x)
+    act_array_generic!(out, o, x)
 end
 
 function (o::BoxSym)(x)
